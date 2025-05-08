@@ -9,12 +9,14 @@ from typing import Dict, Any, Optional, List
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ml.lead_model import LeadScoringModel
 from ml.data_processor import DataProcessor
+from ml.tabnet_model import TabNetLeadScoringModel
 
 router = APIRouter()
 
 # Initialize the models
 lead_scoring_model = None
 lead_scoring_model_bank = None
+lead_scoring_tabnet_model = None
 
 # Check if the Bank model exists and load it
 model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'lead_scoring_model.pkl')
@@ -111,7 +113,7 @@ class FeatureImportanceItem(BaseModel):
 @router.post("/score", response_model=ScoringResponse)
 async def score_lead(lead: LeadData):
     """Score a lead using the trained ML model"""
-    global lead_scoring_model, lead_scoring_model_bank
+    global lead_scoring_model, lead_scoring_model_bank, lead_scoring_tabnet_model
     
     # Log the incoming request data
     print("\n----- INCOMING LEAD SCORING REQUEST -----")
@@ -154,28 +156,35 @@ async def score_lead(lead: LeadData):
     error_message = None
     
     # Choose appropriate model based on dataset_type
+    model_type = getattr(lead, 'model_type', 'random_forest').lower()
     if dataset_type == "lead_scoring":
-        # Use lead scoring model if available
-        if lead_scoring_model is None:
-            try:
-                print("Creating and training new lead scoring model...")
-                lead_scoring_model = LeadScoringModel('lead_scoring')
-                lead_scoring_model.train()
-                lead_scoring_model.save_model('lead_scoring_custom_model.pkl')
-                print("Lead scoring model created and trained successfully")
-            except Exception as e:
-                error_msg = f"Model not trained or loaded: {str(e)}"
-                print(f"ERROR: {error_msg}")
-                # Fall back to the bank model
-                print("Falling back to bank model")
-                dataset_type = "bank"
-                error_message = error_msg
-        
-        # Select the appropriate model
-        if dataset_type == "lead_scoring":
-            selected_model = lead_scoring_model
+        if model_type == "transformer":
+            if lead_scoring_tabnet_model is None:
+                try:
+                    print("Creating and training new TabNet transformer model...")
+                    lead_scoring_tabnet_model = TabNetLeadScoringModel()
+                    lead_scoring_tabnet_model.train()
+                    print("TabNet model created and trained successfully")
+                except Exception as e:
+                    error_msg = f"TabNet model not trained or loaded: {str(e)}"
+                    print(f"ERROR: {error_msg}")
+                    dataset_type = "bank"
+                    error_message = error_msg
+            selected_model = lead_scoring_tabnet_model
         else:
-            selected_model = lead_scoring_model_bank
+            if lead_scoring_model is None:
+                try:
+                    print("Creating and training new lead scoring model...")
+                    lead_scoring_model = LeadScoringModel('lead_scoring')
+                    lead_scoring_model.train()
+                    lead_scoring_model.save_model('lead_scoring_custom_model.pkl')
+                    print("Lead scoring model created and trained successfully")
+                except Exception as e:
+                    error_msg = f"Model not trained or loaded: {str(e)}"
+                    print(f"ERROR: {error_msg}")
+                    dataset_type = "bank"
+                    error_message = error_msg
+            selected_model = lead_scoring_model
     else:
         # Use bank model
         selected_model = lead_scoring_model_bank
@@ -220,18 +229,25 @@ async def score_lead(lead: LeadData):
         )
 
 @router.get("/train", response_model=ModelMetricsResponse)
-async def train_model(dataset_type: str = "bank"):
+async def train_model(dataset_type: str = "bank", model_type: str = "random_forest"):
     """Train or retrain the lead scoring model"""
-    global lead_scoring_model, lead_scoring_model_bank
+    global lead_scoring_model, lead_scoring_model_bank, lead_scoring_tabnet_model
     
     try:
         if dataset_type.lower() == "lead_scoring":
-            lead_scoring_model = LeadScoringModel('lead_scoring')
-            lead_scoring_model.train()
-            lead_scoring_model.save_model('lead_scoring_custom_model.pkl')
-            metrics = lead_scoring_model.metrics
-            metrics['dataset_type'] = 'lead_scoring'
-            return metrics
+            if model_type == "transformer":
+                lead_scoring_tabnet_model = TabNetLeadScoringModel()
+                lead_scoring_tabnet_model.train()
+                metrics = lead_scoring_tabnet_model.metrics
+                metrics['dataset_type'] = 'lead_scoring'
+                return metrics
+            else:
+                lead_scoring_model = LeadScoringModel('lead_scoring')
+                lead_scoring_model.train()
+                lead_scoring_model.save_model('lead_scoring_custom_model.pkl')
+                metrics = lead_scoring_model.metrics
+                metrics['dataset_type'] = 'lead_scoring'
+                return metrics
         else:
             lead_scoring_model_bank = LeadScoringModel()
             lead_scoring_model_bank.train()

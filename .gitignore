@@ -26,6 +26,22 @@ build/
 .env.local
 .env.*.local
 
+# History files
+.history/
+.history*
+
 # System files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Backend specific
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Frontend specific
+.next/
+out/
+.vercel 
