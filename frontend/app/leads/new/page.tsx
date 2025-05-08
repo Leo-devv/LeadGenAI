@@ -172,11 +172,7 @@ export default function NewLeadPage() {
     probability: number;
     status: string;
     dataset_type?: string;
-  } | null>(null);
-  
-  const [comparisonResult, setComparisonResult] = useState<{
-    bank_model: any;
-    lead_scoring_model: any;
+    error?: string;
   } | null>(null);
   
   const [isDownloading, setIsDownloading] = useState(false);
@@ -288,12 +284,14 @@ export default function NewLeadPage() {
     e.preventDefault();
     
     // Validate form
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
+    const isValid = validateForm();
+    if (!isValid) {
       return;
     }
     
     setIsSubmitting(true);
+    setScoringResult(null);
+    setErrors({});
     
     try {
       // Add dataset type to request
@@ -318,12 +316,19 @@ export default function NewLeadPage() {
       
       const result = await response.json();
       
+      // Check if there was an error in the response
+      if (result.error) {
+        console.warn('Scoring warning:', result.error);
+        // We still set the scoring result since the API returns a fallback score
+      }
+      
       // Update state with response
       setScoringResult({
         score: result.score,
         probability: result.probability,
         status: result.status,
-        dataset_type: datasetType
+        dataset_type: result.dataset_type || datasetType,
+        error: result.error
       });
     } catch (error) {
       console.error('Error scoring lead:', error);
@@ -349,7 +354,7 @@ export default function NewLeadPage() {
     setIsDownloading(true);
     
     try {
-      // Call our PDF generation API endpoint
+      // Call our HTML report generation API endpoint
       const response = await fetch('/api/lead-pdf', {
         method: 'POST',
         headers: {
@@ -362,66 +367,28 @@ export default function NewLeadPage() {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to generate PDF: ${response.status}`);
+        throw new Error(`Failed to generate report: ${response.status}`);
       }
       
-      // Get the PDF blob
-      const pdfBlob = await response.blob();
+      // For HTML report, we'll open it in a new window
+      const htmlContent = await response.text();
       
-      // Create object URL for download
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+      // Open the report in a new window
+      const reportWindow = window.open('', '_blank');
+      if (reportWindow) {
+        reportWindow.document.write(htmlContent);
+        reportWindow.document.close();
+      } else {
+        throw new Error('Unable to open report window. Please check your popup settings.');
+      }
       
-      // Create download link
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = pdfUrl;
-      a.download = 'LeadGenius_Score_Report.pdf';
-      
-      // Trigger download
-      document.body.appendChild(a);
-      a.click();
-      
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(pdfUrl);
-        setIsDownloading(false);
-      }, 100);
+      setIsDownloading(false);
     } catch (error) {
-      console.error('Error downloading PDF:', error);
+      console.error('Error viewing report:', error);
       setErrors({
-        form: 'Error generating PDF. Please try again.'
+        form: 'Error generating report. Please try again.'
       });
       setIsDownloading(false);
-    }
-  };
-  
-  // Add compare models function
-  const compareModels = async () => {
-    try {
-      // Use POST instead of GET since we're sending data
-      const response = await fetch('/api/ml-scoring/compare', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      setComparisonResult(result);
-      
-    } catch (error) {
-      console.error('Error comparing models:', error);
-      setErrors({
-        form: 'Error comparing models. Please try again.'
-      });
     }
   };
   
@@ -460,7 +427,7 @@ export default function NewLeadPage() {
                 <div className="flex space-x-4">
                   <button
                     type="button"
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                       datasetType === 'bank' 
                         ? 'bg-primary-100 text-primary-800 border border-primary-300' 
                         : 'bg-white text-secondary-700 border border-secondary-300 hover:bg-secondary-50'
@@ -471,7 +438,7 @@ export default function NewLeadPage() {
                   </button>
                   <button
                     type="button"
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                       datasetType === 'lead_scoring' 
                         ? 'bg-primary-100 text-primary-800 border border-primary-300' 
                         : 'bg-white text-secondary-700 border border-secondary-300 hover:bg-secondary-50'
@@ -614,16 +581,16 @@ export default function NewLeadPage() {
                         {errors[field.name] && (
                           <p className="mt-1 text-sm text-red-500">{errors[field.name]}</p>
                         )}
-                </div>
+                      </div>
                     ))}
-              </div>
+                  </div>
                 </>
               )}
               
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="btn-primary px-6 py-2.5 rounded-md flex items-center justify-center min-w-[120px] transition-all duration-200 hover:shadow-md"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
@@ -680,6 +647,21 @@ export default function NewLeadPage() {
                         Using {scoringResult.dataset_type === 'bank' ? 'Bank Marketing' : 'B2B Lead Scoring'} dataset
                       </p>
                 </div>
+                
+                {scoringResult.error && (
+                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-4 text-left">
+                    <div className="flex">
+                      <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <div className="ml-3">
+                        <p className="text-sm text-yellow-700">
+                          Using fallback scoring model. The requested model was not available.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                     <div className="border-t border-b border-gray-200 py-4 my-4">
                       <h4 className="font-semibold text-secondary-800 mb-3">Lead Information</h4>
@@ -752,35 +734,38 @@ export default function NewLeadPage() {
                   </p>
                 </div>
                 
-                <div className="flex justify-center space-x-3">
+                <div className="flex justify-center space-x-3 mt-6">
                   <button 
                     onClick={handleDownloadPDF}
                     disabled={isDownloading}
-                    className="btn-outline flex items-center"
+                    className="flex items-center justify-center px-4 py-2 border border-primary-300 text-primary-700 rounded-md font-medium hover:bg-primary-50 transition-all duration-200 min-w-[130px]"
                   >
                     {isDownloading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-primary-600 mr-2"></div>
-                        Downloading...
+                        <span>Processing...</span>
                       </>
                     ) : (
                       <>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                         </svg>
-                        Download PDF
+                        <span>View Report</span>
                       </>
                     )}
                   </button>
                   <button 
                     onClick={handleSaveAndView}
-                    className="btn-primary"
+                    className="flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 transition-all duration-200 min-w-[130px]"
                   >
-                    Save Lead
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Save Lead</span>
                   </button>
-                    </div>
                 </div>
               </div>
+            </div>
             ) : (
               <div className="flex flex-col items-center justify-center text-center h-64 text-secondary-500">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mb-2 text-secondary-400">
@@ -801,33 +786,6 @@ export default function NewLeadPage() {
           </div>
         </div>
       </div>
-      
-      {/* Add the comparison results section */}
-      {comparisonResult && (
-        <div className="card p-4 mt-4">
-          <h3 className="text-sm font-medium text-secondary-900 mb-2">Model Comparison</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="border rounded-lg p-3">
-              <h4 className="text-xs font-semibold">Bank Model</h4>
-              <div className="text-xl font-bold mt-1">
-                {comparisonResult.bank_model.score}
-              </div>
-              <div className="text-xs">
-                Status: {comparisonResult.bank_model.status}
-              </div>
-            </div>
-            <div className="border rounded-lg p-3">
-              <h4 className="text-xs font-semibold">Lead Scoring Model</h4>
-              <div className="text-xl font-bold mt-1">
-                {comparisonResult.lead_scoring_model.score}
-              </div>
-              <div className="text-xs">
-                Status: {comparisonResult.lead_scoring_model.status}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 } 

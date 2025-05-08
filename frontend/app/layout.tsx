@@ -32,9 +32,6 @@ export default function RootLayout({
                 <Link href="/leads/new" className="text-gray-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium">
                   Score Lead
                 </Link>
-                <Link href="/training" className="text-gray-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium">
-                  Train Model
-                </Link>
               </nav>
             </div>
           </div>
