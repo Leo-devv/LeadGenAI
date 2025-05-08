@@ -1,0 +1,31 @@
+# Android files
+.android/
+*.avd/
+*.img
+*.qcow2
+
+# Cache and temporary files
+.cache/
+node_modules/
+__pycache__/
+*.pyc
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build files
+dist/
+build/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# System files
+.DS_Store
+Thumbs.db 
