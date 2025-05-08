@@ -1,5 +1,9 @@
 {
   "/page": "app/page.js",
   "/leads/page": "app/leads/page.js",
-  "/leads/new/page": "app/leads/new/page.js"
+  "/leads/new/page": "app/leads/new/page.js",
+  "/training/page": "app/training/page.js",
+  "/api/score-lead/route": "app/api/score-lead/route.js",
+  "/api/ml-scoring/train/route": "app/api/ml-scoring/train/route.js",
+  "/api/lead-pdf/route": "app/api/lead-pdf/route.js"
 }
