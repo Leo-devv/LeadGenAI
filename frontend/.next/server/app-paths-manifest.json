@@ -1,7 +1,5 @@
 {
+  "/api/score-lead/route": "app/api/score-lead/route.js",
   "/page": "app/page.js",
-  "/leads/page": "app/leads/page.js",
-  "/leads/new/page": "app/leads/new/page.js",
-  "/api/lead-pdf/route": "app/api/lead-pdf/route.js",
-  "/api/score-lead/route": "app/api/score-lead/route.js"
+  "/leads/new/page": "app/leads/new/page.js"
 }

@@ -5,7 +5,7 @@
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-rgb: 248, 250, 252;
-  --primary-color: 79, 70, 229;
+  --primary-color: 37, 99, 235;
   --secondary-color: 75, 85, 99;
 }
 
@@ -24,7 +24,7 @@ body {
 }
 
 .btn-primary {
-  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+  @apply bg-blue-600 text-white hover:bg-blue-700;
 }
 
 .btn-secondary {
@@ -32,7 +32,7 @@ body {
 }
 
 .text-primary-600 {
-  @apply text-indigo-600;
+  @apply text-blue-700;
 }
 
 .text-secondary-500 {
@@ -45,4 +45,8 @@ body {
 
 .text-secondary-900 {
   @apply text-gray-900;
+}
+
+.btn-outline {
+  @apply border border-blue-300 text-blue-700 bg-white hover:bg-blue-50;
 }

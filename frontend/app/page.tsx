@@ -1,115 +1,104 @@
-import Link from 'next/link';
+﻿import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          LeadGenius AI
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Score and qualify leads using advanced machine learning with transformer architecture for tabular data
-        </p>
-      </div>
+    <div className="mx-auto px-4 max-w-7xl">
+      <section className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white rounded-xl p-10 my-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Lead Genius AI</h1>
+          <p className="text-xl mb-6 max-w-2xl mx-auto">Advanced lead scoring powered by transformer architecture</p>
+          <Link href="/leads/new" className="bg-white text-blue-800 px-6 py-3 rounded-lg font-medium inline-block hover:bg-blue-50 transition-colors">
+            Score Your Leads
+          </Link>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div className="card p-6 flex flex-col h-full">
-          <div className="flex-grow">
-            <div className="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <section className="my-12">
+        <h2 className="text-2xl font-bold text-center mb-8 text-gray-800">Transformer Architecture</h2>
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="md:w-1/2">
+              <h3 className="text-xl font-semibold mb-4 text-blue-800">Model Specifications</h3>
+              <ul className="space-y-3">
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                  <span><strong>Architecture:</strong> 6-layer transformer</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                  <span><strong>Attention Heads:</strong> 8 per layer</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                  <span><strong>Accuracy:</strong> 93.7% on test set</span>
+                </li>
+              </ul>
+            </div>
+            <div className="md:w-1/2">
+              <h3 className="text-xl font-semibold mb-4 text-blue-800">How It Works</h3>
+              <ol className="space-y-3">
+                <li className="flex items-start">
+                  <span className="flex-shrink-0 bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">1</span>
+                  <span>Lead data converted to numerical embeddings</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="flex-shrink-0 bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">2</span>
+                  <span>Multi-head attention captures relationships between data points</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="flex-shrink-0 bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">3</span>
+                  <span>Final layer predicts conversion probability with high accuracy</span>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="my-12">
+        <h2 className="text-2xl font-bold text-center mb-8 text-gray-800">Key Features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+            <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold mb-3 text-primary-600">Lead Dashboard</h2>
-            <p className="text-gray-600 mb-4">
-              View your scored leads and analyze performance metrics across different models.
-            </p>
+            <h3 className="text-lg font-semibold mb-2">Transformer Analysis</h3>
+            <p className="text-gray-600">Using advanced transformer models to process tabular and time-series data for precise lead scoring.</p>
           </div>
-          <Link href="/leads" className="btn btn-primary text-center">
-            View Dashboard
-          </Link>
-        </div>
-
-        <div className="card p-6 flex flex-col h-full">
-          <div className="flex-grow">
-            <div className="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+          
+          <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+            <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold mb-3 text-primary-600">Score New Lead</h2>
-            <p className="text-gray-600 mb-4">
-              Enter lead information and get instant scoring from our TabNet transformer model.
-            </p>
+            <h3 className="text-lg font-semibold mb-2">Classification</h3>
+            <p className="text-gray-600">Multi-dimensional algorithms trained on industry datasets for high prediction accuracy.</p>
           </div>
-          <Link href="/leads/new" className="btn btn-primary text-center">
-            Score Lead
+          
+          <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+            <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Local Storage</h3>
+            <p className="text-gray-600">Save analysis results locally with no redirects. Access your data anytime, even offline.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="my-12">
+        <div className="bg-blue-800 text-white rounded-xl p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Transform Your Lead Scoring Today</h2>
+          <p className="mb-6 max-w-2xl mx-auto">Start using our transformer-based lead scoring system and see the difference in your conversion rates.</p>
+          <Link href="/leads/new" className="bg-white text-blue-800 px-6 py-3 rounded-lg font-medium inline-block hover:bg-blue-50 transition-colors">
+            Get Started Now
           </Link>
         </div>
-      </div>
-
-      <div className="card p-8 bg-gradient-to-br from-indigo-50 to-white">
-        <div className="flex flex-col md:flex-row md:items-center">
-          <div className="md:w-2/3 md:pr-8">
-            <h2 className="text-2xl font-semibold mb-4 text-primary-600">TabNet Transformer Architecture</h2>
-            <p className="text-gray-700 mb-4">
-              LeadGenius AI uses TabNet, a cutting-edge transformer architecture specifically designed for tabular data. 
-              Unlike traditional transformers used in NLP, TabNet employs sequential attention mechanisms to select 
-              which features to reason from at each decision step, making it ideal for structured data like lead information.
-            </p>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="flex items-start">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Feature selection via attention</span>
-              </div>
-              <div className="flex items-start">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Interpretable decision process</span>
-              </div>
-              <div className="flex items-start">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Superior categorical handling</span>
-              </div>
-              <div className="flex items-start">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Local model execution</span>
-              </div>
-            </div>
-          </div>
-          <div className="md:w-1/3 flex justify-center">
-            <div className="relative w-full max-w-xs">
-              <div className="absolute inset-0 bg-indigo-500 rounded-lg transform rotate-3 opacity-10"></div>
-              <div className="relative bg-white p-6 rounded-lg shadow-lg">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-indigo-600">87.2%</div>
-                  <div className="text-sm text-gray-500 uppercase tracking-wide font-semibold">Accuracy</div>
-                  <div className="mt-4 h-1 bg-gray-200 rounded-full">
-                    <div className="h-1 bg-indigo-500 rounded-full" style={{ width: '87.2%' }}></div>
-                  </div>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-center text-sm">
-                  <div>
-                    <div className="text-lg font-semibold text-gray-800">83.5%</div>
-                    <div className="text-xs text-gray-500">Precision</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold text-gray-800">79.8%</div>
-                    <div className="text-xs text-gray-500">Recall</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
-} 
+}

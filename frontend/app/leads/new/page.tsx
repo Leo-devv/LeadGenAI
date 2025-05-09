@@ -176,6 +176,7 @@ export default function NewLeadPage() {
   } | null>(null);
   
   const [isDownloading, setIsDownloading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>('');
   
   // Handle form input changes
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -343,8 +344,33 @@ export default function NewLeadPage() {
   const handleSaveAndView = () => {
     if (!scoringResult) return;
     
-    // In a real app, this would save to backend, but for this demo we'll just navigate
-    router.push('/leads');
+    // Save to local storage instead of navigating to leads dashboard
+    try {
+      const savedAnalyses = JSON.parse(localStorage.getItem('leadAnalyses') || '[]');
+      const analysisToSave = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        leadData: formData,
+        scoringResult,
+        datasetType
+      };
+      
+      savedAnalyses.push(analysisToSave);
+      localStorage.setItem('leadAnalyses', JSON.stringify(savedAnalyses));
+      
+      // Show success message instead of redirecting
+      setSuccessMessage('Analysis saved successfully! You can access all saved analyses from your local storage.');
+      
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
+    } catch (error) {
+      console.error('Error saving analysis:', error);
+      setErrors({
+        form: 'Failed to save analysis locally. Please try again.'
+      });
+    }
   };
   
   // Update download PDF functionality
@@ -398,14 +424,14 @@ export default function NewLeadPage() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center">
-            <Link href="/leads" className="text-primary-600 hover:text-primary-900 mr-4">
+            <Link href="/" className="text-blue-700 hover:text-blue-900 mr-4">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
             </Link>
-            <h1 className="text-2xl font-semibold text-secondary-900">LeadGenius AI Lead Scoring</h1>
+            <h1 className="text-2xl font-semibold text-secondary-900">Lead Genius AI Analysis</h1>
           </div>
-          <p className="text-secondary-500 mt-1">Score new leads using our advanced machine learning model</p>
+          <p className="text-secondary-500 mt-1">Score leads using our advanced machine learning model</p>
         </div>
       </div>
       
@@ -429,7 +455,7 @@ export default function NewLeadPage() {
                     type="button"
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                       datasetType === 'bank' 
-                        ? 'bg-primary-100 text-primary-800 border border-primary-300' 
+                        ? 'bg-blue-100 text-blue-800 border border-blue-300' 
                         : 'bg-white text-secondary-700 border border-secondary-300 hover:bg-secondary-50'
                     }`}
                     onClick={() => handleDatasetTypeChange('bank')}
@@ -440,7 +466,7 @@ export default function NewLeadPage() {
                     type="button"
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                       datasetType === 'lead_scoring' 
-                        ? 'bg-primary-100 text-primary-800 border border-primary-300' 
+                        ? 'bg-blue-100 text-blue-800 border border-blue-300' 
                         : 'bg-white text-secondary-700 border border-secondary-300 hover:bg-secondary-50'
                     }`}
                     onClick={() => handleDatasetTypeChange('lead_scoring')}
@@ -596,9 +622,16 @@ export default function NewLeadPage() {
                   {isSubmitting ? (
                     <div className="flex items-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
-                      Scoring...
+                      Analyzing...
                     </div>
-                  ) : 'Score Lead'}
+                  ) : (
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Analyze Lead
+                    </div>
+                  )}
                 </button>
               </div>
             </form>
@@ -608,7 +641,16 @@ export default function NewLeadPage() {
         {/* Result Panel */}
         <div className="lg:col-span-1">
           <div className="card p-6">
-            <h2 className="text-lg font-semibold text-secondary-900 mb-4">Scoring Result</h2>
+            <h2 className="text-lg font-semibold text-secondary-900 mb-4">Analysis Result</h2>
+            
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4 flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{successMessage}</span>
+              </div>
+            )}
             
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             {scoringResult ? (
@@ -717,7 +759,7 @@ export default function NewLeadPage() {
                     </div>
 
                     <div className="mt-4">
-                      <h4 className="font-semibold text-secondary-800 mb-2">Recommendation</h4>
+                      <h4 className="font-semibold text-secondary-800 mb-2">Recommended Action</h4>
                       <p className="text-secondary-600 text-sm">
                         {scoringResult.status === 'hot' 
                           ? (scoringResult.dataset_type === 'bank'
@@ -738,17 +780,17 @@ export default function NewLeadPage() {
                   <button 
                     onClick={handleDownloadPDF}
                     disabled={isDownloading}
-                    className="flex items-center justify-center px-4 py-2 border border-primary-300 text-primary-700 rounded-md font-medium hover:bg-primary-50 transition-all duration-200 min-w-[130px]"
+                    className="flex items-center justify-center px-4 py-2 border border-blue-300 text-blue-700 rounded-md font-medium hover:bg-blue-50 transition-all duration-200 min-w-[130px]"
                   >
                     {isDownloading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-primary-600 mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-600 mr-2"></div>
                         <span>Processing...</span>
                       </>
                     ) : (
                       <>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                         </svg>
                         <span>View Report</span>
                       </>
@@ -756,12 +798,12 @@ export default function NewLeadPage() {
                   </button>
                   <button 
                     onClick={handleSaveAndView}
-                    className="flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 transition-all duration-200 min-w-[130px]"
+                    className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-all duration-200 min-w-[130px]"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Save Lead</span>
+                    <span>Save Analysis</span>
                   </button>
                 </div>
               </div>
@@ -771,7 +813,7 @@ export default function NewLeadPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mb-2 text-secondary-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                 </svg>
-                <p>Fill out the form and click "Score Lead" to get an AI-powered lead score</p>
+                <p>Fill out the form and click "Analyze Lead" to get an AI-powered lead score</p>
               </div>
             )}
             </div>
@@ -781,7 +823,7 @@ export default function NewLeadPage() {
             <h3 className="text-sm font-medium text-secondary-900 mb-2">About AI Lead Scoring</h3>
             <p className="text-xs text-secondary-600">
               Our machine learning model analyzes 20+ factors to predict lead conversion probability.
-              The model is trained on historical data and continuously improves with new information.
+              The model is trained on business data and provides actionable intelligence for your sales team.
             </p>
           </div>
         </div>
