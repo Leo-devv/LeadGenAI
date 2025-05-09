@@ -302,13 +302,16 @@ export default function NewLeadPage() {
         model_type: 'random_forest' // Default model type
       };
       
+      console.log("Submitting lead data:", datasetType);
+      
       // Send data to API for scoring
       const response = await fetch('/api/score-lead', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestData),
+        cache: 'no-store'
       });
       
       if (!response.ok) {
@@ -320,7 +323,15 @@ export default function NewLeadPage() {
       // Check if there was an error in the response
       if (result.error) {
         console.warn('Scoring warning:', result.error);
-        // We still set the scoring result since the API returns a fallback score
+        
+        // If requested lead_scoring but got bank, show a different error
+        if (datasetType === 'lead_scoring' && result.dataset_type === 'bank') {
+          setErrors({
+            form: 'The B2B lead scoring model is still loading. Please try again in a moment.'
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
       
       // Update state with response

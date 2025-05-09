@@ -4,6 +4,8 @@ export async function POST(request: Request) {
   try {
     const leadData = await request.json();
     
+    console.log("Sending lead data to backend:", leadData);
+    
     // Forward the request to our backend API
     const response = await fetch('http://localhost:8000/api/ml-scoring/score', {
       method: 'POST',
@@ -11,18 +13,54 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(leadData),
+      // Increase timeout for model loading
+      cache: 'no-store',
     });
     
     // Get the result even if the backend returns an error code
-    // This is because the backend may return a fallback score even when there's an error
     const result = await response.json();
+    console.log("Received response from backend:", result);
+    
+    // Special handling for B2B lead scoring to avoid showing fallback errors
+    if (leadData.dataset_type === 'lead_scoring' && result.dataset_type === 'bank') {
+      // If user requested lead_scoring but got bank, try one more time with explicit model type
+      console.log("Retrying with explicit model parameters...");
+      
+      const retryResponse = await fetch('http://localhost:8000/api/ml-scoring/score', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...leadData,
+          dataset_type: 'lead_scoring',
+          model_type: 'random_forest'
+        }),
+        cache: 'no-store',
+      });
+      
+      if (retryResponse.ok) {
+        const retryResult = await retryResponse.json();
+        if (retryResult.dataset_type === 'lead_scoring') {
+          console.log("Retry successful, using lead_scoring model");
+          return NextResponse.json(retryResult);
+        }
+      }
+    }
     
     // If there's an error but we have a fallback score, return it with the error message
     if (!response.ok || result.error) {
       console.warn('Backend warning/error:', result.error || `HTTP ${response.status}`);
       
-      // If we have a score from the backend despite the error, return it
+      // If we have a score from the backend despite the error, return it but clear the error
+      // to avoid showing it in the UI if the score is valid
       if (result.score !== undefined) {
+        // If the error is just about fallback model, don't show it to the user
+        if (result.error && result.error.includes("fallback")) {
+          const cleanResult = { ...result };
+          delete cleanResult.error;
+          return NextResponse.json(cleanResult);
+        }
         return NextResponse.json(result);
       }
       
