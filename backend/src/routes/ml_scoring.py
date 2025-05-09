@@ -13,34 +13,63 @@ from ml.tabnet_model import TabNetLeadScoringModel
 
 router = APIRouter()
 
-# Initialize the models
+# Global variables for storing model instances
 lead_scoring_model = None
 lead_scoring_model_bank = None
 lead_scoring_tabnet_model = None
 
-# Check if the Bank model exists and load it
-model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'lead_scoring_model.pkl')
-if os.path.exists(model_path):
-    try:
-        lead_scoring_model_bank = LeadScoringModel()
-        lead_scoring_model_bank.load_model(model_path)
-        print(f"Loaded existing bank model from {model_path}")
-    except Exception as e:
-        print(f"Error loading bank model: {str(e)}")
-else:
-    print(f"Bank model not found at {model_path}, will be created when requested")
+# Get the absolute path to the data directory
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+data_dir = os.path.join(project_root, 'data')
+print(f"Data directory path: {data_dir}")
 
-# Check if the Lead Scoring model exists and load it
-lead_model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'lead_scoring_custom_model.pkl')
-if os.path.exists(lead_model_path):
+def update_models(lead_model, bank_model, tabnet_model):
+    """Update global model references when initialized from main.py"""
+    global lead_scoring_model, lead_scoring_model_bank, lead_scoring_tabnet_model
+    
+    # Only update if not None
+    if lead_model is not None:
+        lead_scoring_model = lead_model
+    
+    if bank_model is not None:
+        lead_scoring_model_bank = bank_model
+    
+    if tabnet_model is not None:
+        lead_scoring_tabnet_model = tabnet_model
+
+# Check if models exist and load them
+def load_models():
+    global lead_scoring_model, lead_scoring_model_bank, lead_scoring_tabnet_model
+    
     try:
-        lead_scoring_model = LeadScoringModel('lead_scoring')
-        lead_scoring_model.load_model(lead_model_path)
-        print(f"Loaded existing lead scoring model from {lead_model_path}")
+        # Check for bank model
+        model_path = os.path.join(data_dir, 'lead_scoring_model.pkl')
+        if os.path.exists(model_path):
+            try:
+                lead_scoring_model_bank = LeadScoringModel()
+                lead_scoring_model_bank.load_model(model_path)
+                print(f"Loaded existing bank model from {model_path}")
+            except Exception as e:
+                print(f"Error loading bank model: {str(e)}")
+        else:
+            print(f"Bank model not found at {model_path}, will be created when requested")
+
+        # Check for lead scoring model
+        lead_model_path = os.path.join(data_dir, 'lead_scoring_custom_model.pkl')
+        if os.path.exists(lead_model_path):
+            try:
+                lead_scoring_model = LeadScoringModel('lead_scoring')
+                lead_scoring_model.load_model(lead_model_path)
+                print(f"Loaded existing lead scoring model from {lead_model_path}")
+            except Exception as e:
+                print(f"Error loading lead scoring model: {str(e)}")
+        else:
+            print(f"Lead scoring model not found at {lead_model_path}, will be created when requested")
     except Exception as e:
-        print(f"Error loading lead scoring model: {str(e)}")
-else:
-    print(f"Lead scoring model not found at {lead_model_path}, will be created when requested")
+        print(f"Error during model loading: {str(e)}")
+
+# Load models at module import time
+load_models()
 
 # Pydantic models for request and response
 class LeadData(BaseModel):
@@ -131,6 +160,11 @@ async def score_lead(lead: LeadData):
     if "dataset_type" in lead_dict:
         lead_dict.pop("dataset_type")
     
+    if "model_type" in lead_dict:
+        model_type = lead_dict.pop("model_type")
+    else:
+        model_type = "random_forest"
+    
     # Format field names to match what the model expects
     try:
         # Add both formats to ensure compatibility
@@ -155,10 +189,25 @@ async def score_lead(lead: LeadData):
     
     error_message = None
     
+    # If models are not loaded, try loading them again
+    if lead_scoring_model is None and dataset_type == "lead_scoring":
+        try:
+            lead_scoring_model = LeadScoringModel('lead_scoring')
+            lead_model_path = os.path.join(data_dir, 'lead_scoring_custom_model.pkl')
+            if os.path.exists(lead_model_path):
+                lead_scoring_model.load_model(lead_model_path)
+                print(f"Loaded lead scoring model on demand from {lead_model_path}")
+            else:
+                print("Training new lead scoring model on demand...")
+                lead_scoring_model.train()
+                lead_scoring_model.save_model('lead_scoring_custom_model.pkl')
+        except Exception as e:
+            error_message = f"Failed to load or train lead scoring model: {str(e)}"
+            print(f"ERROR: {error_message}")
+    
     # Choose appropriate model based on dataset_type
-    model_type = getattr(lead, 'model_type', 'random_forest').lower()
     if dataset_type == "lead_scoring":
-        if model_type == "transformer":
+        if model_type.lower() == "transformer":
             if lead_scoring_tabnet_model is None:
                 try:
                     print("Creating and training new TabNet transformer model...")

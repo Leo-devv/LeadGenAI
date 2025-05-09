@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 
-from routes.ml_scoring import router as ml_scoring_router
+from routes.ml_scoring import router as ml_scoring_router, load_models
+from initialize_models import initialize_models, get_models
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -20,6 +21,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize models on startup
+@app.on_event("startup")
+async def startup_event():
+    # Initialize models and make them available
+    lead_model, bank_model, tabnet_model = initialize_models()
+    
+    # Update the models in the routes
+    from routes.ml_scoring import update_models
+    update_models(lead_model, bank_model, tabnet_model)
 
 # Include routers
 app.include_router(ml_scoring_router, prefix="/api/ml-scoring", tags=["ML Scoring"])
